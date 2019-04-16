@@ -1,6 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_calculator/bloc/main_bloc.dart';
 
 void main() => runApp(new MyApp());
 
@@ -12,10 +11,7 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  void numberPressed(int value) {}
-  void calculate() {}
-  void displayNumbersPressed() {}
-  void displayAnswer() {}
+  MainBloc _mainBloc = MainBloc();
 
   List<Widget> buildNumberButtons(int count, int from, int flex) {
     return new Iterable.generate(count, (index) {
@@ -24,7 +20,7 @@ class MyAppState extends State<MyApp> {
         child: new Padding(
           padding: const EdgeInsets.all(1.0),
           child: FlatButton(
-              onPressed: () => numberPressed(from + index),
+              onPressed: () => _mainBloc.numberPressed(from + index),
               color: Colors.white,
               child: Text(
                 "${from + index}",
@@ -35,14 +31,14 @@ class MyAppState extends State<MyApp> {
     }).toList();
   }
 
-  Widget buildOperatorButton(String label, OperatorFunc func, int flex,
+  Widget buildOperatorButton(String label, int flex,
       {Color color = Colors.amber}) {
     return Expanded(
       flex: flex,
       child: Padding(
         padding: const EdgeInsets.all(1.0),
         child: FlatButton(
-            onPressed: () => calc(func),
+            onPressed: () => _mainBloc.operatorPressed(label),
             color: color,
             child: Text(
               label,
@@ -53,19 +49,16 @@ class MyAppState extends State<MyApp> {
   }
 
   Widget buildRow(int numberKeyCount, int startNumber, int numberFlex,
-      String operationLabel) {
+      String operationLabel, int operationFlex) {
     return new Expanded(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: new List.from(
-          buildNumberButtons(
-            numberKeyCount,
-            startNumber,
-            numberFlex,
-          ),
-        ),
-      ),
-    );
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: new List.from(buildNumberButtons(
+              numberKeyCount,
+              startNumber,
+              numberFlex,
+            ))
+              ..add(buildOperatorButton(operationLabel, operationFlex))));
   }
 
   @override
@@ -78,31 +71,57 @@ class MyAppState extends State<MyApp> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             Expanded(
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                  Text(
-                    resultString,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontSize: 50.0, color: Colors.white),
-                  )
+                  _getResultText(_mainBloc),
+                  _getInputText(_mainBloc)
                 ])),
-            buildRow(3, 7, 1, "/"),
-            buildRow(3, 4, 1, "x"),
-            buildRow(3, 1, 1, "-"),
-            buildRow(1, 0, 3, "+"),
+            buildRow(3, 7, 1, "/", 1),
+            buildRow(3, 4, 1, "x", 1),
+            buildRow(3, 1, 1, "-", 1),
+            buildRow(1, 0, 3, "+", 1),
             Expanded(
                 child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                buildOperatorButton("C", null, 1, color: Colors.grey),
-                buildOperatorButton("=", (accu, dividor) => accu, 3)
+                buildOperatorButton("C", 1, color: Colors.grey),
+                buildOperatorButton("=", 3)
               ],
             ))
           ],
         ),
       ),
     ));
+  }
+
+  Widget _getResultText(MainBloc bloc) {
+    return StreamBuilder<String>(
+      stream: bloc.result,
+      initialData: "",
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        return Padding(
+          padding: EdgeInsets.all(10),
+          child: Text(snapshot.data,
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 30.0, color: Colors.white)),
+        );
+      },
+    );
+  }
+
+  Widget _getInputText(MainBloc bloc) {
+    return StreamBuilder<String>(
+      stream: bloc.input,
+      initialData: "",
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        return Padding(
+          padding: EdgeInsets.all(10),
+          child: Text(snapshot.data,
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 25.0, color: Colors.white)),
+        );
+      },
+    );
   }
 }
