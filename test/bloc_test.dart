@@ -11,4 +11,9 @@ void main() {
     // Then
     expect(a, 'b');
   });
+  
+  // Testing RX Streams
+  //
+  // operatorPressed.add('3');
+  // await expectLater(_updateDisplay.stream, emits('3'));
 }
